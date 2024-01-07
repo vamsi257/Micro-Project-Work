@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>Project</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet"
+              href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script
+        src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script
+        src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Bungee+Spice&family=Lemon&display=swap" rel="stylesheet">
+    </head>
+    <body style="background-color:#7FC7D9; font-family:'Bungee Spice', sans-serif; ">
+        <div class="container">
+            <h2>Project Management form</h2>
+            <form id="empForm" method="post">
+                <div class="form-group">
+                    <label for="ProjectId">Project ID:</label>
+                    <input style="font-family: 'Lemon', serif" type="text" class="form-control" name="ProjectId" id="ProjectId"
+                           placeholder="Enter Project ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="ProjectName">Project Name:</label>
+                    <input style="font-family: 'Lemon', serif" type="text" class="form-control" id="ProjectName"
+                           placeholder="Enter Project Name" name="ProjectName">
+                </div>
+                <div class="form-group">
+                    <label for="AssignTo">Assigned To:</label>
+                    <input style="font-family: 'Lemon', serif" type="text" class="form-control" id="AssignTo"
+                           placeholder="Enter assigned to" name="AssignTo">
+                </div>
+                <div class="form-group">
+                    <label for="AssignDate">Assigned Date:</label>
+                    <input style="font-family: 'Lemon', serif" type="date" class="form-control" id="AssignDate"
+                           placeholder="Enter Date" name="AssignDate">
+                </div>
+                <div class="form-group">
+                    <label for="AssignDeadline">Assigned Deadline:</label>
+                    <input style="font-family: 'Lemon', serif" type="date" class="form-control" id="AssignDeadline"
+                           placeholder="Enter assigned Deadline" name="AssignDeadline">
+                </div>
+                <cen> 
+                    <input type="button" class="btn btn-primary" id="empSave" value="Save"
+                           onclick="saveEmployee();">
+                    <input type="button" class="btn btn-primary" id="empChange" value="change"
+                           onclick="ChangeEmployee();">
+                    <input type="button" class="btn btn-primary" id="empReset" value="Reset"
+                           onclick="resetForm();">
+                    </form>
+                    </div>
+                    <script>
+                        $("#empId").focus();
+                        function validateAndGetFormData() {
+                            var ProjectIdVar = $("#ProjectId").val();
+                            if (ProjectIdVar === "") {
+                                alert("Project ID is Required Value");
+                                $("#ProjectId").focus();
+                                return "";
+                            }
+                            var ProjectNameVar = $("#ProjectName").val();
+                            if (ProjectNameVar === "") {
+                                alert("Project Name is Required Value");
+                                $("#ProjectName").focus();
+                                return "";
+                            }
+                            var AssignToVar = $("#AssignTo").val();
+                            if (AssignToVar === "") {
+                                alert("Assigned To is Required Value");
+                                $("#AssignTo").focus();
+                                return "";
+                            }
+                            var AssignDateVar = $("#AssignDate").val();
+                            if (AssignDateVar === "") {
+                                alert("Assigned Date is Required Value");
+                                $("#AssignDate").focus();
+                                return "";
+                            }
+                            var AssignDeadlineVar = $("#AssignDeadline").val();
+                            if (AssignDeadlineVar === "") {
+                                alert("Assigned Deadline is Required Value");
+                                $("#AssignDeadline").focus();
+                                return "";
+                            }
+                            var jsonStrObj = {
+                                ProjectId: ProjectIdVar,
+                                ProjectName: ProjectNameVar,
+                                AssignTo: AssignToVar,
+                                AssignDate: AssignDateVar,
+                                AssignDeadline: AssignDeadlineVar
+                            };
+                            return JSON.stringify(jsonStrObj);
+                        }
+                        // This method is used to create PUT Json request.
+                        function createPUTRequest(connToken, jsonObj, dbName, relName) {
+                            var putRequest = "{\n"
+                                    + "\"token\" : \""
+                                    + connToken
+                                    + "\","
+                                    + "\"dbName\": \""
+                                    + dbName
+                                    + "\",\n" + "\"cmd\" : \"PUT\",\n"
+                                    + "\"rel\" : \""
+                                    + relName + "\","
+                                    + "\"jsonStr\": \n"
+                                    + jsonObj
+                                    + "\n"
+                                    + "}";
+                            return putRequest;
+                        }
+                        function executeCommand(reqString, dbBaseUrl, apiEndPointUrl) {
+                            var url = dbBaseUrl + apiEndPointUrl;
+                            var jsonObj;
+                            $.post(url, reqString, function (result) {
+                                jsonObj = JSON.parse(result);
+                            }).fail(function (result) {
+                                var dataJsonObj = result.responseText;
+                                jsonObj = JSON.parse(dataJsonObj);
+                            });
+                            return jsonObj;
+                        }
+                        function ChangeEmployee()
+                        {
+                            $("#change").prop("disabled".true);
+                            jsonChg = validateAndGetFormData()
+                            var updateRequest = createUPDATERecordRequest(connToken, jsonChg, empDBName, empRelationName, localStorage.getItem("recno"));
+                            jQuery.ajaxSetup({async: false});
+                            var resJsonObj = executeCommandAtGivenBaseUrl(updateRequest, jpdbBaseURL, jpdbIML);
+                            jQuery.ajaxSetup({async: true});
+                            console.log(resJsonObj);
+                            resetForm();
+                            $("#empid").focus();
+                        }
+                        function resetForm() {
+                            $("#ProjectId").val("")
+                            $("#ProjectName").val("");
+                            $("#AssignTo").val("");
+                            $("#AssignDate").val("");
+                            $("#AssignDeadline").val("");
+                            $("#empId").focus();
+                        }
+                        function saveEmployee() {
+                            var jsonStr = validateAndGetFormData();
+                            if (jsonStr === "") {
+                                return;
+                            }
+                            var putReqStr = createPUTRequest("90931859|-31949301410926102|90963073", jsonStr, "PROJECT", "PROJECT-Rel");
+                            alert(putReqStr);
+                            jQuery.ajaxSetup({async: false});
+                            var resultObj = executeCommand(putReqStr,
+                                    "http://api.login2explore.com:5577", "/api/iml");
+                            alert(JSON.stringify(resultObj));
+                            jQuery.ajaxSetup({async: true});
+                            resetForm();
+                        }
+                    </script>
+                    </body>
+                    </html>
